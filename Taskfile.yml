@@ -1,0 +1,62 @@
+version: '3'
+env:
+  MYSQL_ROOT_PASSWORD: 787e83815de2a574
+  MYSQL_DATABASE: uca_quiz
+  WAIT_FOR_IT: 1
+  NETWORK: vs
+  PORT: 8080
+
+tasks:
+  default:
+    cmds:
+      - task: network
+      - task: up
+
+  build:
+    desc: Installs Task
+    cmds:
+      - docker build -t vs/mariadb ./database
+      - docker build -t vs/app ./web
+    status:
+      - docker inspect --type=image vs/mariadb
+      - docker inspect --type=image vs/app
+    silent: true
+
+  network:
+    cmds:
+      - docker network create $NETWORK
+    status:
+      - docker network inspect $NETWORK
+
+  up:
+    desc: Create and start containers
+    cmds:
+      - task: build
+      - cmd: >
+          docker run -d --name vs-mariadb
+          -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+          -e MYSQL_DATABASE=$MYSQL_DATABASE
+          --network $NETWORK
+          --net-alias mysql
+          --expose 3306
+          vs/mariadb
+      - cmd: >
+          docker run -d --name vs-app
+          -e WAIT_FOR_IT=$WAIT_FOR_IT
+          --network $NETWORK
+          -p $PORT:8000
+          vs/app
+    status:
+      - docker container inspect -f '{{.State.Status}}' vs-mariadb
+      - docker container inspect -f '{{.State.Status}}' vs-app
+    silent: false
+
+  down:
+    desc: Installs Task
+    cmds:
+      - cmd: docker stop vs-mariadb vs-app
+        ignore_error: true
+      - cmd: docker rm vs-mariadb vs-app
+        ignore_error: true
+      - docker network rm $NETWORK
+    silent: true

@@ -1,0 +1,7 @@
+[client]
+host = mysql
+port = 3306
+database = uca_quiz
+user = root
+password = 787e83815de2a574
+default-character-set = utf8

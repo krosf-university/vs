@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vs-app
+  namespace: vs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vs-app
+  template:
+    metadata:
+      labels:
+        app: vs-app
+    spec:
+      initContainers:
+        - name: init-vs-app
+          image: krosf/vs:mysql
+          command: ["/bin/sh"]
+          args:
+            - -c
+            - >-
+              python manage.py wait_for_database &&
+              python manage.py migrate
+          envFrom:
+          - configMapRef:
+              name: vs-config
+          - secretRef:
+              name: vs-secrets
+      containers:
+      - name: vs-app
+        image: krosf/vs:mysql
+        envFrom:
+          - configMapRef:
+              name: vs-config
+          - secretRef:
+              name: vs-secrets
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vs-static
+  namespace: vs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vs-static
+  template:
+    metadata:
+      labels:
+        app: vs-static
+    spec:
+      containers:
+      - name: vs-static
+        image: krosf/vs:static
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80

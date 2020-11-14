@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: vs
+  name: vs-app-svc
+  labels:
+    app: vs-app
+spec:
+  type: ClusterIP
+  selector:
+    app: vs-app
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: vs
+  name: vs-static-svc
+  labels:
+    app: vs-static
+spec:
+  type: ClusterIP
+  selector:
+    app: vs-static
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: vs
+  name: mariadb-svc
+  labels:
+    app: mariadb
+spec:
+  type: ClusterIP
+  selector:
+    app: mariadb
+  clusterIP: None
+  ports:
+  - name: mysql
+    port: 3306
+    targetPort: 3306

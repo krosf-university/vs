@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vs-app-secrets
+type: Opaque
+stringData:
+  DATABASE_ENGINE: mysql
+  DATABASE_NAME: vs
+  DATABASE_USERNAME: root
+  DATABASE_PASSWORD: traefik
+  DATABASE_HOST: "192.168.0.11"
+  DATABASE_PORT: "3306"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vs-app-confing
+data:
+  DATABASE_ENGINE: mysql
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vs-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vs-app
+  template:
+    metadata:
+      labels:
+        app: vs-app
+    spec:
+      containers:
+      - name: vs-app
+        image: krosf/vs:sqlite
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vs-app-svc
+  labels:
+    app: vs-app
+spec:
+  type: ClusterIP
+  selector:
+    app: vs-app
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: vs
+  namespace: vs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`vs.intl.krosf.com`)
+      kind: Rule
+      services:
+        - name: vs-app-svc
+          port: 8080
+  tls:
+    certResolver: cloudflare

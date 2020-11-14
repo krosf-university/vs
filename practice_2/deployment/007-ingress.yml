@@ -1,0 +1,33 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: stripprefix
+  namespace: vs
+spec:
+  stripPrefix:
+    prefixes:
+      - /static
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: vs-ingress
+  namespace: vs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`vs.intl.krosf.com`)
+      kind: Rule
+      services:
+        - name: vs-app-svc
+          port: 8080
+    - match: Host(`vs.intl.krosf.com`) && PathPrefix(`/static`)
+      kind: Rule
+      services:
+        - name: vs-static-svc
+          port: 8080
+      middlewares:
+        - name: stripprefix
+  tls:
+    certResolver: cloudflare

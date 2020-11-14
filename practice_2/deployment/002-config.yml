@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vs-config
+  namespace: vs
+data:
+  DATABASE_ENGINE: mysql
+  DATABASE_HOST: mariadb-svc
+  DATABASE_PORT: "3306"

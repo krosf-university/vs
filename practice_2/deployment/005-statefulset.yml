@@ -35,7 +35,7 @@ spec:
         image: bitnami/mariadb:10.5.8-debian-10-r0
         imagePullPolicy: IfNotPresent
         securityContext:
-           runAsUser: 1001
+          runAsUser: 1001
         envFrom:
           - secretRef:
               name: mariadb-secrets
